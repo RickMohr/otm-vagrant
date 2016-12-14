@@ -17,6 +17,10 @@ To get started, do the following steps:
 
  - Install [Vagrant](http://www.vagrantup.com/) and [VirtualBox](https://www.virtualbox.org/)
  - Clone this repository
+ - Create a [Google Maps API key](https://developers.google.com/maps/documentation/javascript/get-api-key) and add a line to `configs/usr/local/otm/app/opentreemap/opentreemap/settings/local_settings.py`:
+```python
+GOOGLE_MAPS_API_KEY = 'the-api-key-you-just-created'
+```
  - Run the script `get-repos.sh`
  - Run the command `vagrant up`
 

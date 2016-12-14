@@ -43,7 +43,7 @@ if ! sudo -u postgres psql otm -c ''; then
 fi
 
 # Pillow
-apt-get install -yq libfreetype6-dev zlib1g-dev libpq-dev libxml2-dev
+apt-get install -yq libfreetype6-dev
 
 # OTM2 (UI testing)
 apt-get install -yq xvfb firefox
@@ -60,12 +60,18 @@ mkdir -p /usr/local/otm/static || true
 mkdir -p /usr/local/otm/media || true
 chown vagrant:vagrant /usr/local/otm/static
 chown vagrant:vagrant /usr/local/otm/media
+chmod 777 /usr/local/otm/media
 
-# OTM2 client-side bundle
-npm install
-# Weird issues with newest version of grunt in combination with grunt-browserify
-npm install -g grunt-cli@0.1.9
-sudo -u vagrant grunt --dev
+# Fetch newer version of nodejs, to use for bundling assets
+NODE_VERSION_FOR_WEBPACK=0.12.15
+sudo npm install -g nave
+nave install $NODE_VERSION_FOR_WEBPACK
+
+# Bundle JS and CSS
+nave use $NODE_VERSION_FOR_WEBPACK npm install
+python opentreemap/manage.py collectstatic_js_reverse
+nave use $NODE_VERSION_FOR_WEBPACK npm run build
+nave use $NODE_VERSION_FOR_WEBPACK python opentreemap/manage.py collectstatic --noinput
 
 # Run Django migrations
 python opentreemap/manage.py migrate
@@ -75,7 +81,7 @@ python opentreemap/manage.py create_system_user
 apt-get install -yq libgeos-dev mercurial
 cd /usr/local/ecoservice
 if ! go version; then
-    wget -q "https://go.googlecode.com/files/go1.2.linux-amd64.tar.gz" -O /tmp/go.tar.gz
+    wget -q "https://storage.googleapis.com/golang/go1.6.3.linux-amd64.tar.gz" -O /tmp/go.tar.gz
     tar -C /usr/local -xzf /tmp/go.tar.gz
     sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
 fi
