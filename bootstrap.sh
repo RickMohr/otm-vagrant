@@ -8,7 +8,7 @@ apt-get update
 
 apt-get install -yq python-software-properties python-setuptools git
 
-add-apt-repository -y ppa:chris-lea/node.js
+#add-apt-repository -y ppa:chris-lea/node.js
 
 apt-get update
 
@@ -20,8 +20,13 @@ service tiler stop || true
 service ecoservice stop || true
 service celeryd stop || true
 
-# nodejs & redis - needed for django and tiler
-apt-get install -yq nodejs redis-server
+# redis - needed for django
+apt-get install -yq redis-server
+
+# nvm - manage different versions of nodejs needed by tiler and app
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.1/install.sh | bash
+export NVM_DIR="/home/vagrant/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
 
 # Django + GeoDjango
 apt-get install -yq gettext libgeos-dev libproj-dev libgdal1-dev build-essential python-pip python-dev
@@ -62,16 +67,13 @@ chown vagrant:vagrant /usr/local/otm/static
 chown vagrant:vagrant /usr/local/otm/media
 chmod 777 /usr/local/otm/media
 
-# Fetch newer version of nodejs, to use for bundling assets
-NODE_VERSION_FOR_WEBPACK=0.12.15
-sudo npm install -g nave
-nave install $NODE_VERSION_FOR_WEBPACK
-
 # Bundle JS and CSS
-nave use $NODE_VERSION_FOR_WEBPACK npm install
+NODE_VERSION_FOR_APP=0.12.15
+nvm install $NODE_VERSION_FOR_APP
+npm install
 python opentreemap/manage.py collectstatic_js_reverse
-nave use $NODE_VERSION_FOR_WEBPACK npm run build
-nave use $NODE_VERSION_FOR_WEBPACK python opentreemap/manage.py collectstatic --noinput
+npm run build
+python opentreemap/manage.py collectstatic --noinput
 
 # Run Django migrations
 python opentreemap/manage.py migrate
@@ -97,7 +99,10 @@ make build
 # tiler
 apt-get install -yq libsigc++-2.0-dev libmapnik-dev mapnik-utils
 cd /usr/local/tiler
+NODE_VERSION_FOR_TILER=0.10.32
+nvm install $NODE_VERSION_FOR_TILER
 npm install
+nvm use $NODE_VERSION_FOR_APP
 
 # nginx
 apt-get install -yq nginx
