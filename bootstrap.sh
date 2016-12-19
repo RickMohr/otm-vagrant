@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Make the script exit early if any command fails
-set -e
+set -e  # exit script early if any command fails
+set -x  # print commands before executing them
 
 # Add PPAs
 apt-get update
@@ -25,8 +25,7 @@ apt-get install -yq redis-server
 
 # nvm - manage different versions of nodejs needed by tiler and app
 curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.1/install.sh | bash
-export NVM_DIR="/home/vagrant/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+source /root/.nvm/nvm.sh
 
 # Django + GeoDjango
 apt-get install -yq gettext libgeos-dev libproj-dev libgdal1-dev build-essential python-pip python-dev
@@ -50,11 +49,6 @@ fi
 # Pillow
 apt-get install -yq libfreetype6-dev
 
-# OTM2 (UI testing)
-apt-get install -yq xvfb firefox
-# OTM2 (JS testing)
-npm install -g testem
-
 cd /usr/local/otm/app
 pip install -r requirements.txt
 pip install -r dev-requirements.txt
@@ -74,6 +68,11 @@ npm install
 python opentreemap/manage.py collectstatic_js_reverse
 npm run build
 python opentreemap/manage.py collectstatic --noinput
+
+# For UI testing
+apt-get install -yq xvfb firefox
+# For JS testing
+npm install -g testem
 
 # Run Django migrations
 python opentreemap/manage.py migrate
@@ -101,8 +100,8 @@ apt-get install -yq libsigc++-2.0-dev libmapnik-dev mapnik-utils
 cd /usr/local/tiler
 NODE_VERSION_FOR_TILER=0.10.32
 nvm install $NODE_VERSION_FOR_TILER
+npm install --global --force npm@2.1.17
 npm install
-nvm use $NODE_VERSION_FOR_APP
 
 # nginx
 apt-get install -yq nginx
